@@ -36,7 +36,7 @@ void search_buf(const char *buf, const size_t buf_len,
         matches_spare = 0;
     }
 
-    if (opts.query_len == 1 && opts.query[0] == '.') {
+    if (!opts.literal && opts.query_len == 1 && opts.query[0] == '.') {
         matches_size = 1;
         matches = ag_malloc(matches_size * sizeof(match_t));
         matches[0].start = 0;
@@ -127,6 +127,9 @@ void search_buf(const char *buf, const size_t buf_len,
         stats.total_bytes += buf_len;
         stats.total_files++;
         stats.total_matches += matches_len;
+        if (matches_len > 0) {
+            stats.total_file_matches++;
+        }
         pthread_mutex_unlock(&stats_mtx);
     }
 
@@ -522,7 +525,7 @@ void search_dir(ignores *ig, const char *base_path, const char *path, const int 
                      * If the user didn't intentionally specify a particular depth,
                      * this is a warning...
                      */
-                    log_warn("Skipping %s. Use the --depth option to search deeper.", dir_full_path);
+                    log_err("Skipping %s. Use the --depth option to search deeper.", dir_full_path);
                 } else {
                     /* ... if they did, let's settle for debug. */
                     log_debug("Skipping %s. Use the --depth option to search deeper.", dir_full_path);
